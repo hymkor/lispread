@@ -58,17 +58,43 @@ const (
 	ERASE_SCRN_AFTER = "\x1B[0m\x1B[0J"
 )
 
+type referCell struct {
+	f func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)
+}
+
+func (rc referCell) Call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
+	r, ok := args[0].(gmnlisp.Integer)
+	if !ok {
+		return nil, gmnlisp.ErrExpectedNumber
+	}
+	c, ok := args[1].(gmnlisp.Integer)
+	if !ok {
+		return nil, gmnlisp.ErrExpectedNumber
+	}
+	if rc.f == nil {
+		return gmnlisp.String(fmt.Sprintf("(func (RC %d %d) called)", r, c)), nil
+	}
+	return rc.f(ctx, w, int(r), int(c))
+}
+
 var lisp = sync.OnceValue(gmnlisp.New)
 
 type Cell struct {
 	source string
 }
 
-func (c Cell) Eval(ctx context.Context) string {
+func (c Cell) Eval(ctx context.Context, refer func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)) string {
 	if len(c.source) <= 0 || c.source[0] != '(' {
 		return c.source
 	}
-	value, err := lisp().Interpret(ctx, c.source)
+
+	rc := &referCell{f: refer}
+
+	L := lisp().Let(gmnlisp.Variables{
+		gmnlisp.NewSymbol("rc"): &gmnlisp.Function{C: 2, F: rc.Call},
+	})
+
+	value, err := L.Interpret(ctx, c.source)
 	if err != nil {
 		return fmt.Sprintf("!`%s`: %s", c.source, err.Error())
 	}
@@ -85,6 +111,7 @@ type LineView struct {
 	MaxInLine int
 	CursorPos int
 	Reverse   bool
+	ReferFunc func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)
 	Out       io.Writer
 }
 
@@ -101,7 +128,7 @@ func (v LineView) Draw(ctx context.Context) {
 	i := 0
 	csvs := v.CSV
 	for len(csvs) > 0 {
-		s := csvs[0].Eval(ctx)
+		s := csvs[0].Eval(ctx, v.ReferFunc)
 		csvs = csvs[1:]
 		nextI := i + 1
 
@@ -145,7 +172,7 @@ var cache = map[int]string{}
 
 const CELL_WIDTH = 14
 
-func view(ctx context.Context, in CsvIn, csrpos, csrlin, w, h int, out io.Writer) (int, error) {
+func view(ctx context.Context, in CsvIn, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error), out io.Writer) (int, error) {
 	reverse := false
 	count := 0
 	lfCount := 0
@@ -177,6 +204,7 @@ func view(ctx context.Context, in CsvIn, csrpos, csrlin, w, h int, out io.Writer
 			CellWidth: CELL_WIDTH,
 			MaxInLine: w,
 			Reverse:   reverse,
+			ReferFunc: referf,
 			Out:       &buffer,
 		}
 		if count == csrlin {
@@ -476,7 +504,21 @@ func mains() error {
 		cols := (screenWidth - 1) / CELL_WIDTH
 
 		window := &MemoryCsv{Data: csvlines, StartX: startCol, StartY: startRow}
-		lf, err := view(ctx, window, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, out)
+		referf := func(ctx context.Context, w *gmnlisp.World, row int, col int) (gmnlisp.Node, error) {
+			if row < 0 || row >= len(csvlines) {
+				return gmnlisp.Null, fmt.Errorf("not found row")
+			}
+			theRow := csvlines[row]
+			if col < 0 || col >= len(theRow) {
+				return gmnlisp.Null, fmt.Errorf("not found cell")
+			}
+			cell := theRow[col]
+			if !strings.HasPrefix(cell, "(") {
+				return gmnlisp.String(cell), nil
+			}
+			return w.Interpret(ctx, cell)
+		}
+		lf, err := view(ctx, window, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
 		if err != nil {
 			return err
 		}
