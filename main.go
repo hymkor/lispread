@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-runewidth"
@@ -19,6 +21,8 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/keys"
 	"github.com/nyaosorg/go-windows-mbcs"
+
+	"github.com/hymkor/gmnlisp"
 )
 
 type _CodeFlag int
@@ -54,8 +58,29 @@ const (
 	ERASE_SCRN_AFTER = "\x1B[0m\x1B[0J"
 )
 
+var lisp = sync.OnceValue(gmnlisp.New)
+
+type Cell struct {
+	source string
+}
+
+func (c Cell) Eval(ctx context.Context) string {
+	if len(c.source) <= 0 || c.source[0] != '(' {
+		return c.source
+	}
+	value, err := lisp().Interpret(ctx, c.source)
+	if err != nil {
+		return fmt.Sprintf("!`%s`: %s", c.source, err.Error())
+	}
+	return value.String()
+}
+
+func (c Cell) Empty() bool {
+	return c.source == ""
+}
+
 type LineView struct {
-	CSV       []string
+	CSV       []Cell
 	CellWidth int
 	MaxInLine int
 	CursorPos int
@@ -71,17 +96,17 @@ var replaceTable = strings.NewReplacer(
 
 // See. en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
-func (v LineView) Draw() {
+func (v LineView) Draw(ctx context.Context) {
 	leftWidth := v.MaxInLine
 	i := 0
 	csvs := v.CSV
 	for len(csvs) > 0 {
-		s := csvs[0]
+		s := csvs[0].Eval(ctx)
 		csvs = csvs[1:]
 		nextI := i + 1
 
 		cw := v.CellWidth
-		for len(csvs) > 0 && csvs[0] == "" && nextI != v.CursorPos {
+		for len(csvs) > 0 && csvs[0].Empty() && nextI != v.CursorPos {
 			cw += v.CellWidth
 			csvs = csvs[1:]
 			nextI++
@@ -120,10 +145,13 @@ var cache = map[int]string{}
 
 const CELL_WIDTH = 14
 
-func view(in CsvIn, csrpos, csrlin, w, h int, out io.Writer) (int, error) {
+func view(ctx context.Context, in CsvIn, csrpos, csrlin, w, h int, out io.Writer) (int, error) {
 	reverse := false
 	count := 0
 	lfCount := 0
+	var cancel func()
+	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	defer cancel()
 	for {
 		if count >= h {
 			return lfCount, nil
@@ -139,9 +167,13 @@ func view(in CsvIn, csrpos, csrlin, w, h int, out io.Writer) (int, error) {
 			lfCount++
 			fmt.Fprintln(out, "\r") // "\r" is for Linux and go-tty
 		}
+		evaled_records := make([]Cell, 0, len(record))
+		for _, v := range record {
+			evaled_records = append(evaled_records, Cell{source: v})
+		}
 		var buffer strings.Builder
 		v := LineView{
-			CSV:       record,
+			CSV:       evaled_records,
 			CellWidth: CELL_WIDTH,
 			MaxInLine: w,
 			Reverse:   reverse,
@@ -153,7 +185,7 @@ func view(in CsvIn, csrpos, csrlin, w, h int, out io.Writer) (int, error) {
 			v.CursorPos = -1
 		}
 
-		v.Draw()
+		v.Draw(ctx)
 		line := buffer.String()
 		if f := cache[count]; f != line {
 			io.WriteString(out, line)
@@ -364,6 +396,8 @@ func first[T any](value T, _ error) T {
 }
 
 func mains() error {
+	ctx := context.Background()
+
 	fmt.Printf("csview %s-%s-%s by %s\n",
 		version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 
@@ -442,7 +476,7 @@ func mains() error {
 		cols := (screenWidth - 1) / CELL_WIDTH
 
 		window := &MemoryCsv{Data: csvlines, StartX: startCol, StartY: startRow}
-		lf, err := view(window, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, out)
+		lf, err := view(ctx, window, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, out)
 		if err != nil {
 			return err
 		}

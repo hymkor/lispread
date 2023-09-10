@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/hymkor/gmnlisp v0.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/text v0.13.0 // indirect
