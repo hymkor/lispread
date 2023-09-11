@@ -378,7 +378,7 @@ func first[T any](value T, _ error) T {
 func mains() error {
 	ctx := context.Background()
 
-	fmt.Printf("csview %s-%s-%s by %s\n",
+	fmt.Printf("lispread %s-%s-%s by %s\n",
 		version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 
 	disable := colorable.EnableColorsStdout(nil)
