@@ -59,6 +59,24 @@ func (rc referCell) Float(ctx context.Context, w *gmnlisp.World, args []gmnlisp.
 	return gmnlisp.Float(val), err
 }
 
+var sumInteger = &gmnlisp.LispString{S: `
+(lambda (r1 c1 r2 c2)
+	(if (> c1 c2)
+		(let ((tmp c1))
+			(setq c1 c2 c2 tmp)))
+	(if (> r1 r2)
+		(let ((tmp r1))
+			(setq r1 r2 r2 tmp)))
+	(let ((sum 0)(r r1))
+		(while (<= r r2)
+			(let ((c c1))
+				(while (<= c c2)
+					(setq sum (+ sum (rc% r c)))
+					(setq c (1+ c))))
+			(setq r (1+ r)))
+		sum))
+`}
+
 var lisp = sync.OnceValue(gmnlisp.New)
 var rowSymbol = sync.OnceValue(func() gmnlisp.Symbol {
 	return gmnlisp.NewSymbol("row")
@@ -84,9 +102,10 @@ func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Con
 	dynamics.Set(colSymbol(), gmnlisp.Integer(col))
 
 	L := lisp().Let(gmnlisp.Variables{
-		gmnlisp.NewSymbol("rc"):  &gmnlisp.Function{C: 2, F: rc.String},
-		gmnlisp.NewSymbol("rc%"): &gmnlisp.Function{C: 2, F: rc.Integer},
-		gmnlisp.NewSymbol("rc!"): &gmnlisp.Function{C: 2, F: rc.Float},
+		gmnlisp.NewSymbol("rc"):   &gmnlisp.Function{C: 2, F: rc.String},
+		gmnlisp.NewSymbol("rc%"):  &gmnlisp.Function{C: 2, F: rc.Integer},
+		gmnlisp.NewSymbol("rc!"):  &gmnlisp.Function{C: 2, F: rc.Float},
+		gmnlisp.NewSymbol("sum%"): sumInteger,
 	})
 
 	value, err := L.Interpret(ctx, c.source)
