@@ -100,6 +100,15 @@ func (rc referCell) Integer(ctx context.Context, w *gmnlisp.World, args []gmnlis
 	return gmnlisp.Integer(val), err
 }
 
+func (rc referCell) Float(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
+	s, err := rc.call(ctx, w, args)
+	if err != nil {
+		return gmnlisp.Null, err
+	}
+	val, err := strconv.ParseFloat(s, 64)
+	return gmnlisp.Float(val), err
+}
+
 var lisp = sync.OnceValue(gmnlisp.New)
 var rowSymbol = sync.OnceValue(func() gmnlisp.Symbol {
 	return gmnlisp.NewSymbol("row")
@@ -127,6 +136,7 @@ func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Con
 	L := lisp().Let(gmnlisp.Variables{
 		gmnlisp.NewSymbol("rc"):  &gmnlisp.Function{C: 2, F: rc.String},
 		gmnlisp.NewSymbol("rc%"): &gmnlisp.Function{C: 2, F: rc.Integer},
+		gmnlisp.NewSymbol("rc!"): &gmnlisp.Function{C: 2, F: rc.Float},
 	})
 
 	value, err := L.Interpret(ctx, c.source)
