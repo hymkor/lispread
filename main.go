@@ -10,9 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/mattn/go-colorable"
@@ -58,97 +56,6 @@ const (
 	ERASE_LINE       = "\x1B[0m\x1B[0K"
 	ERASE_SCRN_AFTER = "\x1B[0m\x1B[0J"
 )
-
-type referCell struct {
-	f func(context.Context, *gmnlisp.World, int, int) (string, error)
-}
-
-func (rc referCell) call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (string, error) {
-	relRow, ok := args[0].(gmnlisp.Integer)
-	if !ok {
-		return "", gmnlisp.ErrExpectedNumber
-	}
-	relCol, ok := args[1].(gmnlisp.Integer)
-	if !ok {
-		return "", gmnlisp.ErrExpectedNumber
-	}
-	if rc.f == nil {
-		return fmt.Sprintf("(func (RC %d %d) called)", relRow, relCol), nil
-	}
-	homeRow, ok := w.Dynamic(rowSymbol()).(gmnlisp.Integer)
-	if !ok {
-		return "", fmt.Errorf("(dynamic (row)): %w", gmnlisp.ErrExpectedNumber)
-	}
-	homeCol, ok := w.Dynamic(colSymbol()).(gmnlisp.Integer)
-	if !ok {
-		return "", fmt.Errorf("(dynamic (col)): %w", gmnlisp.ErrExpectedNumber)
-	}
-	return rc.f(ctx, w, int(homeRow+relRow), int(homeCol+relCol))
-}
-
-func (rc referCell) String(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
-	s, err := rc.call(ctx, w, args)
-	return gmnlisp.String(s), err
-}
-
-func (rc referCell) Integer(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
-	s, err := rc.call(ctx, w, args)
-	if err != nil {
-		return gmnlisp.Null, err
-	}
-	val, err := strconv.Atoi(s)
-	return gmnlisp.Integer(val), err
-}
-
-func (rc referCell) Float(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
-	s, err := rc.call(ctx, w, args)
-	if err != nil {
-		return gmnlisp.Null, err
-	}
-	val, err := strconv.ParseFloat(s, 64)
-	return gmnlisp.Float(val), err
-}
-
-var lisp = sync.OnceValue(gmnlisp.New)
-var rowSymbol = sync.OnceValue(func() gmnlisp.Symbol {
-	return gmnlisp.NewSymbol("row")
-})
-var colSymbol = sync.OnceValue(func() gmnlisp.Symbol {
-	return gmnlisp.NewSymbol("col")
-})
-
-type Cell struct {
-	source string
-}
-
-func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Context, *gmnlisp.World, int, int) (string, error)) string {
-	if len(c.source) <= 0 || c.source[0] != '(' {
-		return c.source
-	}
-
-	rc := &referCell{f: refer}
-
-	dynamics := lisp().NewDynamics()
-	defer dynamics.Close()
-	dynamics.Set(rowSymbol(), gmnlisp.Integer(row))
-	dynamics.Set(colSymbol(), gmnlisp.Integer(col))
-
-	L := lisp().Let(gmnlisp.Variables{
-		gmnlisp.NewSymbol("rc"):  &gmnlisp.Function{C: 2, F: rc.String},
-		gmnlisp.NewSymbol("rc%"): &gmnlisp.Function{C: 2, F: rc.Integer},
-		gmnlisp.NewSymbol("rc!"): &gmnlisp.Function{C: 2, F: rc.Float},
-	})
-
-	value, err := L.Interpret(ctx, c.source)
-	if err != nil {
-		return fmt.Sprintf("!`%s`: %s", c.source, err.Error())
-	}
-	return value.String()
-}
-
-func (c Cell) Empty() bool {
-	return c.source == ""
-}
 
 type LineView struct {
 	CSV       []Cell
