@@ -59,9 +59,7 @@ const (
 )
 
 type referCell struct {
-	startRow int
-	startCol int
-	f        func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)
+	f func(context.Context, *gmnlisp.World, int, int) (string, error)
 }
 
 func (rc referCell) Call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
@@ -76,25 +74,41 @@ func (rc referCell) Call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.N
 	if rc.f == nil {
 		return gmnlisp.String(fmt.Sprintf("(func (RC %d %d) called)", relRow, relCol)), nil
 	}
-	return rc.f(ctx, w, rc.startRow+int(relRow), rc.startCol+int(relCol))
+	homeRow, ok := w.Dynamic(rowSymbol()).(gmnlisp.Integer)
+	if !ok {
+		return nil, fmt.Errorf("(dynamic (row)): %w", gmnlisp.ErrExpectedNumber)
+	}
+	homeCol, ok := w.Dynamic(colSymbol()).(gmnlisp.Integer)
+	if !ok {
+		return nil, fmt.Errorf("(dynamic (col)): %w", gmnlisp.ErrExpectedNumber)
+	}
+	val, err := rc.f(ctx, w, int(homeRow+relRow), int(homeCol+relCol))
+	return gmnlisp.String(val), err
 }
 
 var lisp = sync.OnceValue(gmnlisp.New)
+var rowSymbol = sync.OnceValue(func() gmnlisp.Symbol {
+	return gmnlisp.NewSymbol("row")
+})
+var colSymbol = sync.OnceValue(func() gmnlisp.Symbol {
+	return gmnlisp.NewSymbol("col")
+})
 
 type Cell struct {
 	source string
 }
 
-func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)) string {
+func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Context, *gmnlisp.World, int, int) (string, error)) string {
 	if len(c.source) <= 0 || c.source[0] != '(' {
 		return c.source
 	}
 
-	rc := &referCell{
-		startRow: row,
-		startCol: col,
-		f:        refer,
-	}
+	rc := &referCell{f: refer}
+
+	dynamics := lisp().NewDynamics()
+	defer dynamics.Close()
+	dynamics.Set(rowSymbol(), gmnlisp.Integer(row))
+	dynamics.Set(colSymbol(), gmnlisp.Integer(col))
 
 	L := lisp().Let(gmnlisp.Variables{
 		gmnlisp.NewSymbol("rc"): &gmnlisp.Function{C: 2, F: rc.Call},
@@ -117,7 +131,7 @@ type LineView struct {
 	MaxInLine int
 	CursorPos int
 	Reverse   bool
-	ReferFunc func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error)
+	ReferFunc func(context.Context, *gmnlisp.World, int, int) (string, error)
 	Out       io.Writer
 }
 
@@ -178,7 +192,7 @@ var cache = map[int]string{}
 
 const CELL_WIDTH = 14
 
-func view(ctx context.Context, in CsvIn, startRow, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (gmnlisp.Node, error), out io.Writer) (int, error) {
+func view(ctx context.Context, in CsvIn, startRow, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (string, error), out io.Writer) (int, error) {
 	reverse := false
 	count := 0
 	lfCount := 0
@@ -511,39 +525,35 @@ func mains() error {
 
 		window := &MemoryCsv{Data: csvlines, StartX: startCol, StartY: startRow}
 		refCnt := map[[2]int]struct{}{}
-		var referf func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (gmnlisp.Node, error)
-		referf = func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (gmnlisp.Node, error) {
+		var referf func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (string, error)
+		referf = func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (string, error) {
 			// row and col start from 1 not 0.
 			if absrow < 0 || absrow >= len(csvlines) {
-				return gmnlisp.Null, fmt.Errorf("not found row(%d)", absrow)
+				return "", fmt.Errorf("not found row(%d)", absrow)
 			}
 			theRow := csvlines[absrow]
 			if abscol < 0 || abscol >= len(theRow) {
-				return gmnlisp.Null, fmt.Errorf("not found cell(%d)", abscol)
+				return "", fmt.Errorf("not found cell(%d)", abscol)
 			}
 			cell := theRow[abscol]
 			if !strings.HasPrefix(cell, "(") {
-				return gmnlisp.String(cell), nil
+				return cell, nil
 			}
 			key := [2]int{absrow, abscol}
 			if _, ok := refCnt[key]; ok {
-				return gmnlisp.Null, fmt.Errorf("circular reference")
+				return "", fmt.Errorf("circular reference")
 			}
 			refCnt[key] = struct{}{}
 
-			rc := &referCell{
-				startRow: absrow,
-				startCol: abscol,
-				f:        referf,
-			}
-			w = lisp().Let(gmnlisp.Variables{
-				gmnlisp.NewSymbol("rc"): &gmnlisp.Function{C: 2, F: rc.Call},
-			})
+			dynamics := w.NewDynamics()
+			defer dynamics.Close()
+			dynamics.Set(rowSymbol(), gmnlisp.Integer(absrow))
+			dynamics.Set(colSymbol(), gmnlisp.Integer(abscol))
 
 			val, err := w.Interpret(ctx, cell)
 
 			delete(refCnt, key)
-			return val, err
+			return val.String(), err
 		}
 		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
 		if err != nil {
