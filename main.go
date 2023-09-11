@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -62,28 +63,41 @@ type referCell struct {
 	f func(context.Context, *gmnlisp.World, int, int) (string, error)
 }
 
-func (rc referCell) Call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
+func (rc referCell) call(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (string, error) {
 	relRow, ok := args[0].(gmnlisp.Integer)
 	if !ok {
-		return nil, gmnlisp.ErrExpectedNumber
+		return "", gmnlisp.ErrExpectedNumber
 	}
 	relCol, ok := args[1].(gmnlisp.Integer)
 	if !ok {
-		return nil, gmnlisp.ErrExpectedNumber
+		return "", gmnlisp.ErrExpectedNumber
 	}
 	if rc.f == nil {
-		return gmnlisp.String(fmt.Sprintf("(func (RC %d %d) called)", relRow, relCol)), nil
+		return fmt.Sprintf("(func (RC %d %d) called)", relRow, relCol), nil
 	}
 	homeRow, ok := w.Dynamic(rowSymbol()).(gmnlisp.Integer)
 	if !ok {
-		return nil, fmt.Errorf("(dynamic (row)): %w", gmnlisp.ErrExpectedNumber)
+		return "", fmt.Errorf("(dynamic (row)): %w", gmnlisp.ErrExpectedNumber)
 	}
 	homeCol, ok := w.Dynamic(colSymbol()).(gmnlisp.Integer)
 	if !ok {
-		return nil, fmt.Errorf("(dynamic (col)): %w", gmnlisp.ErrExpectedNumber)
+		return "", fmt.Errorf("(dynamic (col)): %w", gmnlisp.ErrExpectedNumber)
 	}
-	val, err := rc.f(ctx, w, int(homeRow+relRow), int(homeCol+relCol))
-	return gmnlisp.String(val), err
+	return rc.f(ctx, w, int(homeRow+relRow), int(homeCol+relCol))
+}
+
+func (rc referCell) String(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
+	s, err := rc.call(ctx, w, args)
+	return gmnlisp.String(s), err
+}
+
+func (rc referCell) Integer(ctx context.Context, w *gmnlisp.World, args []gmnlisp.Node) (gmnlisp.Node, error) {
+	s, err := rc.call(ctx, w, args)
+	if err != nil {
+		return gmnlisp.Null, err
+	}
+	val, err := strconv.Atoi(s)
+	return gmnlisp.Integer(val), err
 }
 
 var lisp = sync.OnceValue(gmnlisp.New)
@@ -111,7 +125,8 @@ func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Con
 	dynamics.Set(colSymbol(), gmnlisp.Integer(col))
 
 	L := lisp().Let(gmnlisp.Variables{
-		gmnlisp.NewSymbol("rc"): &gmnlisp.Function{C: 2, F: rc.Call},
+		gmnlisp.NewSymbol("rc"):  &gmnlisp.Function{C: 2, F: rc.String},
+		gmnlisp.NewSymbol("rc%"): &gmnlisp.Function{C: 2, F: rc.Integer},
 	})
 
 	value, err := L.Interpret(ctx, c.source)
