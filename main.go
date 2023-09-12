@@ -66,6 +66,8 @@ type LineView struct {
 	CursorPos int
 	Reverse   bool
 	ReferFunc func(context.Context, *gmnlisp.World, int, int) (string, error)
+	StartX    int
+	StartY    int
 	Out       io.Writer
 }
 
@@ -82,7 +84,7 @@ func (v LineView) Draw(ctx context.Context, row int) {
 	i := 0
 	csvs := v.CSV
 	for len(csvs) > 0 {
-		s := csvs[0].Eval(ctx, row, i, v.ReferFunc)
+		s := csvs[0].Eval(ctx, row, v.StartX+i, v.ReferFunc)
 		csvs = csvs[1:]
 		nextI := i + 1
 
@@ -156,6 +158,8 @@ func view(ctx context.Context, in *MemoryCsv, startRow, csrpos, csrlin, w, h int
 			Reverse:   reverse,
 			ReferFunc: referf,
 			Out:       &buffer,
+			StartX:    in.StartX,
+			StartY:    in.StartY,
 		}
 		if count == csrlin {
 			v.CursorPos = csrpos
@@ -498,7 +502,7 @@ func mains() error {
 			}
 			return val.String(), err
 		}
-		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-2, referf, out)
+		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
 		if err != nil {
 			return err
 		}
