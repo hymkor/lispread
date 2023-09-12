@@ -555,13 +555,13 @@ func mains() error {
 
 		getline := func(out io.Writer, prompt string, defaultStr string) (string, error) {
 			text, err := getline(out, prompt, defaultStr)
-			cache = map[int]string{}
+			clear(cache)
 			return text, err
 		}
 
 		switch ch {
 		case _KEY_CTRL_L:
-			cache = map[int]string{}
+			clear(cache)
 		case "q", _KEY_ESC:
 			io.WriteString(out, _ANSI_YELLOW+"\rQuit Sure ? [y/n]"+ERASE_LINE)
 			if ch, err := getKey(tty1); err == nil && ch == "y" {

@@ -1,6 +1,6 @@
 module github.com/hymkor/lispread
 
-go 1.18
+go 1.21
 
 require (
 	github.com/hymkor/gmnlisp v0.3.1
