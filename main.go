@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mattn/go-colorable"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/nyaosorg/go-readline-ny"
 	"github.com/nyaosorg/go-readline-ny/keys"
+	"github.com/nyaosorg/go-readline-skk"
 	"github.com/nyaosorg/go-windows-mbcs"
 
 	"github.com/hymkor/gmnlisp"
@@ -306,7 +308,16 @@ func searchBackward(csvlines [][]string, r, c int, target string) (bool, int, in
 	}
 }
 
+var skkInit sync.Once
+
 func getline(out io.Writer, prompt string, defaultStr string) (string, error) {
+	skkInit.Do(func() {
+		skk.Config{
+			UserJisyoPath:    "~/.go-skk-jisyo",
+			SystemJisyoPaths: []string{"SKK-JISYO.L"},
+		}.Setup()
+	})
+
 	editor := readline.Editor{
 		Writer:  out,
 		Default: defaultStr,
@@ -487,7 +498,7 @@ func mains() error {
 			delete(refCnt, key)
 			return val.String(), err
 		}
-		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
+		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-2, referf, out)
 		if err != nil {
 			return err
 		}
