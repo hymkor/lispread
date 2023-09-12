@@ -497,6 +497,9 @@ func mains() error {
 			val, err := w.Interpret(ctx, cell)
 
 			delete(refCnt, key)
+			if val == nil {
+				return "", err
+			}
 			return val.String(), err
 		}
 		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-2, referf, out)
