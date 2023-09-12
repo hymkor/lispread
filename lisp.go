@@ -118,7 +118,7 @@ func (c Cell) Eval(ctx context.Context, row int, col int, refer func(context.Con
 
 	value, err := L.Interpret(ctx, c.source)
 	if err != nil {
-		return fmt.Sprintf("!`%s`: %s", c.source, err.Error())
+		return fmt.Sprintf("!%s", err.Error())
 	}
 	return value.String()
 }
