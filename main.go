@@ -118,15 +118,11 @@ func (v LineView) Draw(ctx context.Context, row int) {
 	io.WriteString(v.Out, ERASE_LINE)
 }
 
-type CsvIn interface {
-	Read() ([]string, error)
-}
-
 var cache = map[int]string{}
 
 const CELL_WIDTH = 14
 
-func view(ctx context.Context, in CsvIn, startRow, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (string, error), out io.Writer) (int, error) {
+func view(ctx context.Context, in *MemoryCsv, startRow, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (string, error), out io.Writer) (int, error) {
 	reverse := false
 	count := 0
 	lfCount := 0
