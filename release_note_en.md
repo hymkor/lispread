@@ -1,18 +1,18 @@
 - Fix for the the imcompatibility between v0.8.3 and v0.14.0 of go-readline-ny
 
-v0.6.2
+csview v0.6.2
 ------
 on Nov.23, 2022
 
 - Fix: (#3) Too long field breaks the screen layout
 
-v0.6.1
+csview v0.6.1
 ------
 on Feb.19, 2022
 
 - Display [TSV],[CSV],[LF],[CRLF] on the status line.
 
-v0.6.0
+csview v0.6.0
 ------
 on Dec.10, 2021
 
@@ -28,7 +28,7 @@ on Dec.10, 2021
 - Fix: empty lines in the input data were ignored.
 - `x`: assign delete cell same as `d`
 
-v0.5.0
+csview v0.5.0
 ------
 on Mar.27, 2020
 
@@ -36,7 +36,7 @@ on Mar.27, 2020
 - `O` - insert a new line before the current line
 - `D` - delete the current line
 
-v0.4.0
+csview v0.4.0
 ------
 on Nov.4, 2019
 
@@ -50,19 +50,19 @@ on Nov.4, 2019
 - Use stderr for drawing rather than stdout
 - `q`: (quit) ask yes/no
 
-v0.3.0
+csview v0.3.0
 ------
 on Nov.2, 2019
 
 - Support editing and writing to the file.
 
-v0.2.0
+csview v0.2.0
 ------
 on Oct.31, 2019
 
 - Implement search command `/`,`?`,`n`,`N`
 
-v0.1.0
+csview v0.1.0
 ------
 on Oct.27, 2019
 
