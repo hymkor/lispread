@@ -1,4 +1,12 @@
 - Fix for the the imcompatibility between v0.8.3 and v0.14.0 of go-readline-ny
+- Fork from [csview] v0.6.2
+- Evalute S-Expression in cells with gmnlisp
+- Implement `(rc)`, `(rc%)`, `(rc!)`, `(sum%)`, and `(sum!)`.
+- Support [go-readline-skk]
+- `o` and `O` ask the new text of the cell now
+
+[csview]: https://github.com/hymkor/csview
+[go-readline-skk]: https://github.com/nyaosorg/go-readline-skk
 
 csview v0.6.2
 ------

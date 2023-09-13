@@ -1,4 +1,12 @@
 - go-readline-ny v0.8.3-v0.14.0 間の非互換性向け修正
+- [csview] v0.6.2 より fork
+- セル中のS式を、gmnlisp で評価するようにした
+- `(rc)`, `(rc%)`, `(rc!)`, `(sum%)`, and `(sum!)` を実装
+- go-readline-skk をサポート
+- `o` と `O` はセルの新テキストを聞いてくるようになった
+
+[csview]: https://github.com/hymkor/csview
+[go-readline-skk]: https://github.com/nyaosorg/go-readline-skk
 
 csview v0.6.2
 ------
