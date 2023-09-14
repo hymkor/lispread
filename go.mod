@@ -11,6 +11,7 @@ require (
 	github.com/nyaosorg/go-readline-skk v0.0.0-20230828080230-af4e09432d12
 	github.com/nyaosorg/go-windows-mbcs v0.4.2
 	golang.org/x/sys v0.12.0
+	golang.org/x/term v0.7.0
 )
 
 require (
