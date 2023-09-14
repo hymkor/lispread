@@ -124,7 +124,7 @@ var cache = map[int]string{}
 
 const CELL_WIDTH = 14
 
-func view(ctx context.Context, in *MemoryCsv, startRow, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (string, error), out io.Writer) (int, error) {
+func view(ctx context.Context, in *MemoryCsv, csrpos, csrlin, w, h int, referf func(context.Context, *gmnlisp.World, int, int) (string, error), out io.Writer) (int, error) {
 	reverse := false
 	count := 0
 	lfCount := 0
@@ -167,7 +167,7 @@ func view(ctx context.Context, in *MemoryCsv, startRow, csrpos, csrlin, w, h int
 			v.CursorPos = -1
 		}
 
-		v.Draw(ctx, startRow+count)
+		v.Draw(ctx, in.StartY+count)
 		line := buffer.String()
 		if f := cache[count]; f != line {
 			io.WriteString(out, line)
@@ -179,22 +179,23 @@ func view(ctx context.Context, in *MemoryCsv, startRow, csrpos, csrlin, w, h int
 }
 
 type MemoryCsv struct {
-	Data   [][]string
-	StartX int
-	StartY int
+	Data      [][]string
+	StartX    int
+	StartY    int
+	readCount int
 }
 
 func (this *MemoryCsv) Read() ([]string, error) {
-	if this.StartY >= len(this.Data) {
+	if this.StartY+this.readCount >= len(this.Data) {
 		return nil, io.EOF
 	}
-	csv := this.Data[this.StartY]
+	csv := this.Data[this.StartY+this.readCount]
 	if this.StartX <= len(csv) {
 		csv = csv[this.StartX:]
 	} else {
 		csv = []string{}
 	}
-	this.StartY++
+	this.readCount++
 	return csv, nil
 }
 
@@ -502,7 +503,7 @@ func mains() error {
 			}
 			return val.String(), err
 		}
-		lf, err := view(ctx, window, startRow, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
+		lf, err := view(ctx, window, colIndex-startCol, rowIndex-startRow, screenWidth-1, screenHeight-1, referf, out)
 		if err != nil {
 			return err
 		}
