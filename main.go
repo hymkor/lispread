@@ -461,8 +461,7 @@ func mains() error {
 
 		window := &MemoryCsv{Data: csvlines, StartX: startCol, StartY: startRow}
 		refCnt := map[[2]int]struct{}{}
-		var referf func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (string, error)
-		referf = func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (string, error) {
+		referf := func(ctx context.Context, w *gmnlisp.World, absrow int, abscol int) (string, error) {
 			// row and col start from 1 not 0.
 			if absrow < 0 || absrow >= len(csvlines) {
 				return "", fmt.Errorf("not found row(%d)", absrow)
