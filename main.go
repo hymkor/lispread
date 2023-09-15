@@ -187,17 +187,17 @@ type MemoryCsv struct {
 	readCount int
 }
 
-func (this *MemoryCsv) Read() ([]string, error) {
-	if this.StartY+this.readCount >= len(this.Data) {
+func (M *MemoryCsv) Read() ([]string, error) {
+	if M.StartY+M.readCount >= len(M.Data) {
 		return nil, io.EOF
 	}
-	csv := this.Data[this.StartY+this.readCount]
-	if this.StartX <= len(csv) {
-		csv = csv[this.StartX:]
+	csv := M.Data[M.StartY+M.readCount]
+	if M.StartX <= len(csv) {
+		csv = csv[M.StartX:]
 	} else {
 		csv = []string{}
 	}
-	this.readCount++
+	M.readCount++
 	return csv, nil
 }
 
