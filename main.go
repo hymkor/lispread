@@ -396,7 +396,7 @@ func mains() error {
 	var csvlines [][]string
 	var fieldSeperator rune
 	if len(flag.Args()) <= 0 && term.IsTerminal(int(os.Stdin.Fd())) {
-		csvlines = [][]string{[]string{}}
+		csvlines = [][]string{[]string{""}}
 		fieldSeperator = '\t'
 	} else {
 		var pin io.ReadCloser
