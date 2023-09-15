@@ -642,7 +642,6 @@ func mains() error {
 				text, _ := getline(out, "new line>", "")
 				csvlines[rowIndex] = []string{text}
 			}
-			break
 		case "D":
 			if len(csvlines) <= 1 {
 				break
@@ -652,7 +651,6 @@ func mains() error {
 			if rowIndex >= len(csvlines) {
 				rowIndex--
 			}
-			break
 		case "i":
 			text, err := getline(out, "insert cell>", "")
 			if err != nil {
