@@ -306,6 +306,7 @@ func getline(out io.Writer, prompt string, defaultStr string) (string, error) {
 		skk.Config{
 			UserJisyoPath:    "~/.go-skk-jisyo",
 			SystemJisyoPaths: []string{"SKK-JISYO.L"},
+			MiniBuffer:       skk.MiniBufferOnCurrentLine{},
 		}.Setup()
 	})
 
