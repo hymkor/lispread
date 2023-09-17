@@ -303,11 +303,15 @@ var skkInit sync.Once
 
 func getline(out io.Writer, prompt string, defaultStr string) (string, error) {
 	skkInit.Do(func() {
-		skk.Config{
-			UserJisyoPath:    "~/.go-skk-jisyo",
-			SystemJisyoPaths: []string{"SKK-JISYO.L"},
-			MiniBuffer:       skk.MiniBufferOnCurrentLine{},
-		}.Setup()
+		env := os.Getenv("GOREADLINESKK")
+		if env != "" {
+			_, err := skk.Config{
+				MiniBuffer: skk.MiniBufferOnCurrentLine{},
+			}.SetupWithString(env)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+			}
+		}
 	})
 
 	editor := readline.Editor{
