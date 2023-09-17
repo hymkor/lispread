@@ -26,7 +26,7 @@ Readline with SKK[^SKK]
 When the environment variable GOREADLINESKK is defined, [go-readline-skk] is used.
 
 - Windows
-    - `set GOREADLINE=SYSTEMJISYOPATH1;SYSTEMJISYOPATH2...;user=USERJISYOPATH`
+    - `set GOREADLINESKK=SYSTEMJISYOPATH1;SYSTEMJISYOPATH2...;user=USERJISYOPATH`
     - (example) `set GOREADLINESKK=~/Share/Etc/SKK-JISYO.L;~/Share/Etc/SKK-JISYO.emoji;user=~/.go-skk-jisyo`
 - Linux
     - `export GOREADLINE=SYSTEMJISYOPATH1;SYSTEMJISYOPATH2...;user=USERJISYOPATH`
