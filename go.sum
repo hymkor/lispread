@@ -1,7 +1,7 @@
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
-github.com/hymkor/gmnlisp v0.3.1 h1:ExIc+FJ87EMjtpdaexBdiUOZffVH02Nk4hiQQLfH5dw=
-github.com/hymkor/gmnlisp v0.3.1/go.mod h1:o1wipHfTkT6a26F3LakgoEe79kOsJFLrUxQ7alQodWo=
+github.com/hymkor/gmnlisp v0.4.0 h1:fUVFPEGabHoVFxynaYilWiT2HasIeEUCyakANGE4CrU=
+github.com/hymkor/gmnlisp v0.4.0/go.mod h1:QqCsqTHYp3K+Uve/OAC0V4QMVK2p0EGdlKrrHP+OQ7s=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
@@ -15,10 +15,10 @@ github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZ
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/mattn/go-tty v0.0.5 h1:s09uXI7yDbXzzTTfw3zonKFzwGkyYlgU3OMjqA0ddz4=
 github.com/mattn/go-tty v0.0.5/go.mod h1:u5GGXBtZU6RQoKV8gY5W6UhMudbR5vXnUe7j3pxse28=
-github.com/nyaosorg/go-readline-ny v0.14.2-0.20230920061636-989fb80d349e h1:nUHPV+RQG7YttX7iP4Yu+uCwA8xmJW7yubX3ElEwDLY=
-github.com/nyaosorg/go-readline-ny v0.14.2-0.20230920061636-989fb80d349e/go.mod h1:/JojGEnLMPy6g+oHBMqy1/AEUDUgjiG2lUYOalhtQpY=
-github.com/nyaosorg/go-readline-skk v0.0.0-20230920062950-27561e297101 h1:vjszm99EygBOYAY6i86kEt7nuiFp2pk80Tv6z7VWRT0=
-github.com/nyaosorg/go-readline-skk v0.0.0-20230920062950-27561e297101/go.mod h1:X2Y9c9Lg5svynzLJAInXuJ0EUz2tFgjwZHWK5+X5GJo=
+github.com/nyaosorg/go-readline-ny v0.15.1 h1:44lJ9NWl2CwCllP0iT/ssCLlz/W1RYSbN0ODULrGpPo=
+github.com/nyaosorg/go-readline-ny v0.15.1/go.mod h1:/JojGEnLMPy6g+oHBMqy1/AEUDUgjiG2lUYOalhtQpY=
+github.com/nyaosorg/go-readline-skk v0.0.0-20230930235910-657651632cc7 h1:Ijf0pkDYzr5KJM1E0d04ZGjj2j6lOXICAC5EnAhNpaw=
+github.com/nyaosorg/go-readline-skk v0.0.0-20230930235910-657651632cc7/go.mod h1:Nv1y++nRFvz4kbM5E2b/0t7IZrk7BwB3cHJnklIkD88=
 github.com/nyaosorg/go-windows-mbcs v0.4.2 h1:2znrE0YIgDIRlq6YB4l1n8DOlG89dV+hYsBqywL8MrM=
 github.com/nyaosorg/go-windows-mbcs v0.4.2/go.mod h1:FuQCaPRzyLbBL4ZXG+gtSA/hAAgVvIWtpqR2YLWYZiA=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

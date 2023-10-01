@@ -3,12 +3,12 @@ module github.com/hymkor/lispread
 go 1.21
 
 require (
-	github.com/hymkor/gmnlisp v0.3.1
+	github.com/hymkor/gmnlisp v0.4.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mattn/go-tty v0.0.5
-	github.com/nyaosorg/go-readline-ny v0.14.2-0.20230920061636-989fb80d349e
-	github.com/nyaosorg/go-readline-skk v0.0.0-20230920062950-27561e297101
+	github.com/nyaosorg/go-readline-ny v0.15.1
+	github.com/nyaosorg/go-readline-skk v0.0.0-20230930235910-657651632cc7
 	github.com/nyaosorg/go-windows-mbcs v0.4.2
 	golang.org/x/sys v0.12.0
 	golang.org/x/term v0.12.0
